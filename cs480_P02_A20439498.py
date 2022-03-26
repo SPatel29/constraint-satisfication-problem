@@ -12,6 +12,7 @@ class CSP:
         self.domain = {}  # accepted values
         self.constraints = {}  # invalid values
         self.parks = {}
+        self.zones = {}
         self.current_zone = None
 
     def read_file(self, driving_file, parks_file, zones_file):
@@ -45,6 +46,9 @@ class CSP:
         for data in range(len(parks_lst)):
             self.parks[row_lst[data]] = parks_lst[data]
 
+        zones_lst = zones_data[1][1:]
+        for data in range(len(zones_lst)):
+            self.zones[row_lst[data]] = zones_lst[data]
 
 
 
