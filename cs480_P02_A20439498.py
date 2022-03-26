@@ -1,6 +1,7 @@
 from platform import node
 import sys
 import csv
+from turtle import st
 import numpy
 
 
@@ -10,6 +11,8 @@ class CSP:
         self.variables = {}
         self.domain = {}  # accepted values
         self.constraints = {}  # invalid values
+        self.parks = {}
+        self.current_zone = None
 
     def read_file(self, driving_file, parks_file, zones_file):
         row_lst = []
@@ -29,10 +32,20 @@ class CSP:
         for lst in driving_data[1:]:
             state_from = lst[0]
             self.domain[state_from] = {}
-            for data in range(len(lst)):
-                if data != 0 and int(lst[data]) > -1:
-                    state_to = row_lst[data - 1]
+            for data in range(1, len(lst)):
+                state_to = row_lst[data - 1]
+                if int(lst[data]) > 0:
                     self.domain[state_from][state_to] = lst[data]
+                    if state_from in self.constraints.keys():
+                        self.constraints[state_from].append(state_to)
+                    else:
+                        self.constraints[state_from] = [state_to]
+
+        parks_lst = parks_data[1][1:]
+        for data in range(len(parks_lst)):
+            self.parks[row_lst[data]] = parks_lst[data]
+
+
 
 
 def backtracing_search(csp):
