@@ -57,6 +57,7 @@ class CSP:
         print(len(self.driving_distance['VT']), 'distances')
         print(len(self.driving_distance['AR']), 'distances')
         print(self.driving_distance['AR'])
+
     def initial_zone(self):
         return self.zones[self.initial]
 
@@ -107,14 +108,17 @@ def backtrack(csp, assignment):  # csp is the constraint satisfaction problem it
         if value in list(csp.driving_distance[assignment[var - 1]].keys()):
             assignment[var] = value
             inferences = inference(csp, var, assignment)
-            
-        #if inferences:
+            if inferences:
+                result = backtrack(csp, assignment)
+                if result:
+                    return result
+            del assignment[var]
+        # if inferences:
         #    result = backtrack(csp, assignment)
         #    if result:
         #        return result
         #del assignment[var]
-    
-        
+
         # if value not in assignment.keys():  #if value is consistent means if there is a path to the current state and to the next. next state is represented by value
         #    assignment[var] = value
         #result = backtrack(csp, assignment)
@@ -146,7 +150,8 @@ def inference(csp, var, assignment):    # var is next zone
 
     if var == 12:
         return True
-    elif len(csp.driving_distance[assignment[var]]) == 0:   # next state leads to dead end
+    # next state leads to dead end
+    elif len(csp.driving_distance[assignment[var]]) == 0:
         return False
     return True
 
@@ -165,11 +170,14 @@ def order_domain_values(csp, var, assignment):
 def main():
     # if len(sys.argv) == 3:
 
-    csp = CSP("MA", 5)
+    csp = CSP("ME", 5)
     csp.read_file("driving2.csv", "parks.csv", "zones.csv")
     csp.get_zone(csp.initial)
-    backtracing_search(csp)
-
+    output = backtracing_search(csp)
+    if output:
+        print(output)
+    else:
+        print("no solution")
 
 if __name__ == '__main__':
     main()
