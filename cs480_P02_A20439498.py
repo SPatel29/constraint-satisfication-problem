@@ -1,3 +1,4 @@
+from os import stat
 from platform import node
 import sys
 import csv
@@ -37,6 +38,7 @@ class CSP:
         self.domain = driving_data[0][1:]
         row_lst = driving_data[0][1:]
         zones_lst = zones_data[1][1:]
+        parks_lst = parks_data[1][1:]
         for i in range(len(zones_lst)):
             self.constraints[int(zones_lst[i])] = []
             if int(zones_lst[i]) not in self.variables:
@@ -53,10 +55,13 @@ class CSP:
                 if int(i[j]) > 0:
                     self.driving_distance[state_from][state_to] = int(i[j])
 
+        for i in range(len(parks_lst)):
+            self.parks[row_lst[i]] = int(parks_lst[i])
+        
        # print(self.driving_distance["NY"].keys(), 'driving dist')
-        print(len(self.driving_distance['VT']), 'distances')
-        print(len(self.driving_distance['AR']), 'distances')
-        print(self.driving_distance['AR'])
+        #print(len(self.driving_distance['VT']), 'distances')
+        #print(len(self.driving_distance['AR']), 'distances')
+        #print(self.driving_distance['AR'])
 
     def initial_zone(self):
         return self.zones[self.initial]
@@ -170,14 +175,29 @@ def order_domain_values(csp, var, assignment):
 def main():
     # if len(sys.argv) == 3:
 
-    csp = CSP("ME", 5)
+    csp = CSP("ND", 5)
     csp.read_file("driving2.csv", "parks.csv", "zones.csv")
     csp.get_zone(csp.initial)
     output = backtracing_search(csp)
     if output:
+        total = 0
+        parks_total = 0
+        num_states = 0
         print(output)
+        state_names = list(output.values())
+        for i in range(1, len(state_names)):
+            print(csp.driving_distance[state_names[i - 1]][state_names[i]])
+            total += csp.driving_distance[state_names[i - 1]][state_names[i]]
+            parks_total += csp.parks[state_names[i - 1]]
+            num_states += 1
+        parks_total += csp.parks[state_names[-1]]
+        num_states += 1
+        print(parks_total)
+        print(num_states)
+        print(state_names)
     else:
         print("no solution")
+
 
 if __name__ == '__main__':
     main()
