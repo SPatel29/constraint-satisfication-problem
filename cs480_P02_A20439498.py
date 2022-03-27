@@ -13,7 +13,6 @@ class CSP:
         self.domain = []  # domain is values variables can have. I.e states in the zones
         self.constraints = {}  # keys zone and values will be states in that zone
         self.parks = {}  # number of parks in a state
-        self.zones = {}  # zones will be a dictionary, where key is the zone number and its value is a LISTARRAY of all states in that zone
         self.driving_distance = {}
 
         self.initial = initial
@@ -45,6 +44,14 @@ class CSP:
         for i in range(len(zones_lst)):
             self.constraints[int(zones_lst[i])].append(row_lst[i])
 
+        for i in driving_data[1:]:
+            state_from = i[0]
+            self.driving_distance[state_from] = {}
+            for j in range(1, len(i)):
+                state_to = row_lst[j - 1]
+                if int(i[j]) > 0:
+                    self.driving_distance[state_from][state_to] = int(i[j])
+
     def initial_zone(self):
         return self.zones[self.initial]
 
@@ -55,18 +62,24 @@ class CSP:
     def add_variable(self, zone):
         self.variables[zone] = None
 
-    def add_initial(self, initial_zone):
-        self.variables[initial_zone] = self.initial
-        for i in range(initial_zone + 1, 13):
-            # have not yet choosen a state(value) for the rest of the zones(variables)
-            self.variables[i] = None
+
+    def get_zone(self, state):
+        print("test")
+        for key in self.constraints:
+            if state in self.constraints[key]:
+                print(key)
+                return key
+
+
+def add_initial(initial_zone, assignment):
+    for i in range(initial_zone, 13):
+        assignment[i] = None
+    print(assignment)
 
 
 def backtracing_search(csp):
     assignment = {}
-    for variables in csp.variables:  # variables are zone numbers
-        # initialized values to None. No states have been choosen
-        assignment[variables] = None
+    add_initial(csp.get_zone(csp.initial), assignment)
     return backtrack(csp, assignment)
 
 
@@ -113,9 +126,8 @@ def inference(csp, var, assignment):
 def order_domain_values(csp, var, assignment):
     # the word doc said to order all POSSIBLE domain values (next states) alphabetically
     lst = []
-    for state in csp.zones:
-        if csp.zones[state] == var:
-            lst.append(state)
+    for state in csp.constraints[var]:
+        lst.append(state)
 
     return sorted(lst, reverse=False)
 
@@ -123,12 +135,10 @@ def order_domain_values(csp, var, assignment):
 def main():
     # if len(sys.argv) == 3:
 
-    csp = CSP("MA", 5)
+    csp = CSP("VT", 5)
     csp.read_file("driving2.csv", "parks.csv", "zones.csv")
-    #initial_zone = csp.get_zone(csp.initial)
-    # csp.add_initial(initial_zone)
-    # else:
-    #    print('Too enough or too many inpurt arguments')
+    csp.get_zone(csp.initial)
+    backtracing_search(csp)
 
 
 if __name__ == '__main__':
