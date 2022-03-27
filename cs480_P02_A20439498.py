@@ -2,6 +2,7 @@ from platform import node
 import sys
 import csv
 from turtle import st
+from unittest import result
 import numpy
 
 
@@ -46,14 +47,16 @@ class CSP:
         for i in driving_data[1:]:
             state_from = i[0]
             self.driving_distance[state_from] = {}
-            
+
             for j in range(1, len(i)):
                 state_to = row_lst[j - 1]
                 if int(i[j]) > 0:
                     self.driving_distance[state_from][state_to] = int(i[j])
 
-        print(self.driving_distance["NY"].keys(), 'driving dist')
-        #print(self.constraints)
+       # print(self.driving_distance["NY"].keys(), 'driving dist')
+        print(len(self.driving_distance['VT']), 'distances')
+        print(len(self.driving_distance['AR']), 'distances')
+        print(self.driving_distance['AR'])
     def initial_zone(self):
         return self.zones[self.initial]
 
@@ -63,7 +66,6 @@ class CSP:
     # adds variable (zone) into the self.variable. Gives it an initial value of None initially.
     def add_variable(self, zone):
         self.variables[zone] = None
-
 
     def get_zone(self, state):
         print("test")
@@ -79,7 +81,6 @@ def add_initial(initial_zone, assignment, csp):
             assignment[i] = csp.initial
         else:
             assignment[i] = None
-    
 
 
 def backtracing_search(csp):
@@ -102,19 +103,28 @@ def backtrack(csp, assignment):  # csp is the constraint satisfaction problem it
     var = select_unassigned_variable(assignment)   # var is zone
     # value will be a list of states that we can traverse in that zone
     for value in order_domain_values(csp, var, assignment):
-        if value in list(csp.driving_distance[assignment[var - 1]].keys()):   # if value is consistent. Meaning there is path to it from current state to value
-            print(value)
-        #if value not in assignment.keys():  #if value is consistent means if there is a path to the current state and to the next. next state is represented by value
+        # if value is consistent. Meaning there is path to it from current state to value
+        if value in list(csp.driving_distance[assignment[var - 1]].keys()):
+            assignment[var] = value
+            inferences = inference(csp, var, assignment)
+            
+        #if inferences:
+        #    result = backtrack(csp, assignment)
+        #    if result:
+        #        return result
+        #del assignment[var]
+    
+        
+        # if value not in assignment.keys():  #if value is consistent means if there is a path to the current state and to the next. next state is represented by value
         #    assignment[var] = value
         #result = backtrack(csp, assignment)
         #inferences = inference(csp, var, assignment)
-        #if inferences:
+        # if inferences:
        #     result = backtrack(csp, assignment)
        #     if not result:
        #         return result
         #del assignment[var]
     return False
-
 
 
 def select_unassigned_variable(assignment):
@@ -124,9 +134,21 @@ def select_unassigned_variable(assignment):
 
 
 # inference is going to based on previous zone variable assignment
-def inference(csp, var, assignment):
-    # so maybe inference takes a look if we can actually traverse through this zone (check and see if it is conencted to current value (state))
-    pass
+def inference(csp, var, assignment):    # var is next zone
+    # maybe traverse to next state and see if the next state can get me to the next zone
+    # i.e if next state has a path to another state in the next zone?
+    # if it does, return true. We should as a reslt go to the next state since it does not lead
+    # to a dead end
+    # if it doesn't return false. We should not go to that next state since it is a dead end
+    # we need to make sure however to accept zone 12.
+    # recall that zone 12 has a dead end, but that's because that is the end state.
+    # so have an if statement that says if var == 12, return True
+
+    if var == 12:
+        return True
+    elif len(csp.driving_distance[assignment[var]]) == 0:   # next state leads to dead end
+        return False
+    return True
 
 
 # var is the zone we want to traverse
@@ -134,10 +156,10 @@ def inference(csp, var, assignment):
 def order_domain_values(csp, var, assignment):
     # the word doc said to order all POSSIBLE domain values (next states) alphabetically
     #lst = []
-    return csp.constraints[var]
-    
 
-    #return sorted(lst, reverse=False)
+    return sorted(csp.constraints[var])
+
+    # return sorted(lst, reverse=False)
 
 
 def main():
