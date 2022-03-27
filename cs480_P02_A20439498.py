@@ -14,7 +14,6 @@ class CSP:
         self.constraints = {}  # keys zone and values will be states in that zone
         self.parks = {}  # number of parks in a state
         self.driving_distance = {}
-
         self.initial = initial
 
         self.min_num_parks = min_num_parks
@@ -47,11 +46,14 @@ class CSP:
         for i in driving_data[1:]:
             state_from = i[0]
             self.driving_distance[state_from] = {}
+            
             for j in range(1, len(i)):
                 state_to = row_lst[j - 1]
                 if int(i[j]) > 0:
                     self.driving_distance[state_from][state_to] = int(i[j])
 
+        print(self.driving_distance["NY"].keys(), 'driving dist')
+        #print(self.constraints)
     def initial_zone(self):
         return self.zones[self.initial]
 
@@ -71,15 +73,18 @@ class CSP:
                 return key
 
 
-def add_initial(initial_zone, assignment):
+def add_initial(initial_zone, assignment, csp):
     for i in range(initial_zone, 13):
-        assignment[i] = None
-    print(assignment)
+        if i == initial_zone:
+            assignment[i] = csp.initial
+        else:
+            assignment[i] = None
+    
 
 
 def backtracing_search(csp):
     assignment = {}
-    add_initial(csp.get_zone(csp.initial), assignment)
+    add_initial(csp.get_zone(csp.initial), assignment, csp)
     return backtrack(csp, assignment)
 
 
@@ -94,26 +99,28 @@ def backtrack(csp, assignment):  # csp is the constraint satisfaction problem it
 
     if check_consistent(assignment):
         return assignment
-    var = select_unassigned_variable(csp, assignment)   # var is zone
+    var = select_unassigned_variable(assignment)   # var is zone
     # value will be a list of states that we can traverse in that zone
     for value in order_domain_values(csp, var, assignment):
-        if value not in assignment.key():
-            assignment[var] = value
-        result = backtrack(csp, assignment)
-        inferences = inference(csp, var, assignment)
-        if inferences:
-            result = backtrack(csp, assignment)
-            if not result:
-                return result
-        del assignment[var]
+        if value in list(csp.driving_distance[assignment[var - 1]].keys()):   # if value is consistent. Meaning there is path to it from current state to value
+            print(value)
+        #if value not in assignment.keys():  #if value is consistent means if there is a path to the current state and to the next. next state is represented by value
+        #    assignment[var] = value
+        #result = backtrack(csp, assignment)
+        #inferences = inference(csp, var, assignment)
+        #if inferences:
+       #     result = backtrack(csp, assignment)
+       #     if not result:
+       #         return result
+        #del assignment[var]
     return False
 
 
-# returns the variable(zone) that has a value of None
-def select_unassigned_variable(csp, assignment):
-    for variable in csp.variables:
-        if csp.variables[variable] == None and variable not in assignment.keys():
-            return variable  # erturn the next zone we want to visit
+
+def select_unassigned_variable(assignment):
+    for variable in assignment:
+        if not assignment[variable]:
+            return variable
 
 
 # inference is going to based on previous zone variable assignment
@@ -123,19 +130,20 @@ def inference(csp, var, assignment):
 
 
 # var is the zone we want to traverse
+# think I return all possible domain (state names) in the NEXT zone. Recall var is the NEXT zone
 def order_domain_values(csp, var, assignment):
     # the word doc said to order all POSSIBLE domain values (next states) alphabetically
-    lst = []
-    for state in csp.constraints[var]:
-        lst.append(state)
+    #lst = []
+    return csp.constraints[var]
+    
 
-    return sorted(lst, reverse=False)
+    #return sorted(lst, reverse=False)
 
 
 def main():
     # if len(sys.argv) == 3:
 
-    csp = CSP("VT", 5)
+    csp = CSP("MA", 5)
     csp.read_file("driving2.csv", "parks.csv", "zones.csv")
     csp.get_zone(csp.initial)
     backtracing_search(csp)
