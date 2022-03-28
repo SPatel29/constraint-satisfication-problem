@@ -74,10 +74,8 @@ class CSP:
         self.variables[zone] = None
 
     def get_zone(self, state):
-        print("test")
         for key in self.constraints:
             if state in self.constraints[key]:
-                print(key)
                 return key
 
 
@@ -163,48 +161,48 @@ def order_domain_values(csp, var, assignment):
 
 
 def main():
-    # if len(sys.argv) == 3:
-    #    initial_state = sys.argv[1]
-    #    min_parks = sys.argv[2]
-    # try:
-    csp = CSP("IL", 12)
-    csp.read_file("driving2.csv", "parks.csv", "zones.csv")
-    csp.get_zone(csp.initial)
-    output = backtracing_search(csp)
-    print("Patel, Sunny, A20439498 solution: ")
-    print("Initial state: ")
-    print("Minimum number of parks:")
-    if output:
-        total_cost = 0
-        parks_total = 0
-        num_states = 0
-        # print(output)
-        state_names = list(output.values())
-        for i in range(1, len(state_names)):
-            # print(csp.driving_distance[state_names[i - 1]][state_names[i]])
-            total_cost += csp.driving_distance[state_names[i - 1]
-                                               ][state_names[i]]
-            parks_total += csp.parks[state_names[i - 1]]
-            num_states += 1
-            parks_total += csp.parks[state_names[-1]]
-            num_states += 1
-        print("Solution path: ", list(output.values()))
-        print("Number of states on a path", len(list(output.values())))
-        print("Path cost:", total_cost)
-        print("Number of national parks visited: ", csp.parks_visited)
-    else:
-        print("Solution path: FAILURE: NO PATH FOUND")
-        print("Number of states on a path: 0")
-        print("Path cost: 0")
-        print("Number of national parks visited: 0")
-        # except Exception:
-        #    print("Solution path: FAILURE: NO PATH FOUND")
-        #    print("Number of states on a path: 0")
-        #    print("Path cost: 0")
-        #    print("Number of national parks visited: 0")
+    if len(sys.argv) == 3:
+        initial_state = sys.argv[1]
+        min_parks = sys.argv[2]
+        try:
+            csp = CSP(initial_state, int(min_parks))
+            csp.read_file("driving2.csv", "parks.csv", "zones.csv")
+            csp.get_zone(csp.initial)
+            output = backtracing_search(csp)
+            print("\n\nPatel, Sunny, A20439498 solution: ")
+            print("Initial state: ", initial_state)
+            print("Minimum number of parks:", min_parks)
+            if output:
+                total_cost = 0
+                parks_total = 0
+                num_states = 0
+                # print(output)
+                state_names = list(output.values())
+                for i in range(1, len(state_names)):
+                    # print(csp.driving_distance[state_names[i - 1]][state_names[i]])
+                    total_cost += csp.driving_distance[state_names[i - 1]
+                                                       ][state_names[i]]
+                    parks_total += csp.parks[state_names[i - 1]]
+                    num_states += 1
+                    parks_total += csp.parks[state_names[-1]]
+                    num_states += 1
+                print("Solution path: ", list(output.values()))
+                print("Number of states on a path", len(list(output.values())))
+                print("Path cost:", total_cost)
+                print("Number of national parks visited: ", csp.parks_visited)
+            else:
+                print("Solution path: FAILURE: NO PATH FOUND")
+                print("Number of states on a path: 0")
+                print("Path cost: 0")
+                print("Number of national parks visited: 0")
+        except Exception:
+            print("Solution path: FAILURE: NO PATH FOUND")
+            print("Number of states on a path: 0")
+            print("Path cost: 0")
+            print("Number of national parks visited: 0")
 
-    # else:
-    #    print("Too many or too few arguments")
+    else:
+        print("Too many or too few arguments")
 
 
 if __name__ == '__main__':
