@@ -15,11 +15,10 @@ class CSP:
         self.domain = []  # domain is values variables can have. I.e states in the zones
         self.constraints = {}  # keys zone and values will be states in that zone
         self.parks = {}  # number of parks in a state
-        self.driving_distance = {}
-        self.initial = initial
+        self.driving_distance = {}  # will contain driving data, state from to state to
+        self.initial = initial  # initial state
 
         self.min_num_parks = min_num_parks
-        self.initial_zone = None
         self.parks_visited = 0  # parks_visited >= min_num_parks
         self.path_cost = 0
 
@@ -36,10 +35,14 @@ class CSP:
             zones_data = list(csv.reader(f, delimiter=','))
 
         self.domain = driving_data[0][1:]
+        # get state names, excluding the word state from file
         row_lst = driving_data[0][1:]
+        # get zones, excluding the word zone from file
         zones_lst = zones_data[1][1:]
+        # get parks, excluding the word parks from file
         parks_lst = parks_data[1][1:]
         for i in range(len(zones_lst)):
+            # make zones have a value of list of states in that zone
             self.constraints[int(zones_lst[i])] = []
             if int(zones_lst[i]) not in self.variables:
                 self.variables.append(int(zones_lst[i]))
@@ -58,27 +61,17 @@ class CSP:
         for i in range(len(parks_lst)):
             self.parks[row_lst[i]] = int(parks_lst[i])
 
-       # print(self.driving_distance["NY"].keys(), 'driving dist')
-        # print(len(self.driving_distance['VT']), 'distances')
-        # print(len(self.driving_distance['AR']), 'distances')
-        # print(self.driving_distance['AR'])
-
-    def initial_zone(self):
-        return self.zones[self.initial]
-
-    def get_zone(self, current_state):
-        return self.zones[current_state]
-
     # adds variable (zone) into the self.variable. Gives it an initial value of None initially.
     def add_variable(self, zone):
         self.variables[zone] = None
 
+    # returns the zone of where state is at
     def get_zone(self, state):
         for key in self.constraints:
             if state in self.constraints[key]:
                 return key
 
-
+# initialzing assignment dictionary to be false, except inital zone will get value of inital state
 def add_initial(initial_zone, assignment, csp):
     for i in range(initial_zone, 13):
         if i == initial_zone:
@@ -87,24 +80,21 @@ def add_initial(initial_zone, assignment, csp):
         else:
             assignment[i] = False
 
-
 def backtracing_search(csp):
     assignment = {}
     add_initial(csp.get_zone(csp.initial), assignment, csp)
     return backtrack(csp, assignment)
-
 
 def check_consistent(assignment):
     if False not in assignment.values():
         return True
     return False
 
-
-def backtrack(csp, assignment):  # csp is the constraint satisfaction problem it recieved
-    # we have hit a leaf. Finished searching through the current branch
-
+def backtrack(csp, assignment):  
+    # if we traversed through every zone and parks_visted >= min num of parks
     if check_consistent(assignment) and csp.parks_visited >= csp.min_num_parks:
         return assignment
+    # if we traversed through every zone and parks_visted < min num of parks
     elif check_consistent(assignment) and csp.min_num_parks > csp.parks_visited:
         return False
     var = select_unassigned_variable(assignment)   # var is zone
@@ -114,16 +104,19 @@ def backtrack(csp, assignment):  # csp is the constraint satisfaction problem it
         if value in list(csp.driving_distance[assignment[var - 1]].keys()):
             assignment[var] = value
             csp.parks_visited += csp.parks[value]
+            # check and see if we get a dead end
             inferences = inference(csp, var, assignment)
             if inferences:
+                # traverse to next state
                 result = backtrack(csp, assignment)
-                if result:
+                if result:  #if assignment was consistent and parks visted >= min num of parks visted
                     return result
+            # subtract parks visited since removing state
             csp.parks_visited -= csp.parks[assignment[var]]
-            assignment[var] = False
+            assignment[var] = False     # mark zone as not traversed
     return False
 
-
+# traverse through assignment and return the zone that does not have a value yet
 def select_unassigned_variable(assignment):
     for variable in assignment:
         if not assignment[variable]:
@@ -132,14 +125,10 @@ def select_unassigned_variable(assignment):
 
 # inference is going to based on previous zone variable assignment
 def inference(csp, var, assignment):    # var is next zone
-    # maybe traverse to next state and see if the next state can get me to the next zone
-    # i.e if next state has a path to another state in the next zone?
-    # if it does, return true. We should as a reslt go to the next state since it does not lead
-    # to a dead end
-    # if it doesn't return false. We should not go to that next state since it is a dead end
-    # we need to make sure however to accept zone 12.
-    # recall that zone 12 has a dead end, but that's because that is the end state.
-    # so have an if statement that says if var == 12, return True
+    # I plan to see if the state in the next zone leads to a dead end.
+    # If it leads to a dead end, there is no point in traversing into that state
+    # as a result if we find it leads to a dead end and zone is not 12, return false
+    # otherwise return True. I.e let's traverse to that state in the next zone
 
     if var == 12:
         return True
@@ -149,15 +138,10 @@ def inference(csp, var, assignment):    # var is next zone
     return True
 
 
-# var is the zone we want to traverse
-# think I return all possible domain (state names) in the NEXT zone. Recall var is the NEXT zone
+# var is the zone we plan to traverse
 def order_domain_values(csp, var, assignment):
     # the word doc said to order all POSSIBLE domain values (next states) alphabetically
-    # lst = []
-
     return sorted(csp.constraints[var])
-
-    # return sorted(lst, reverse=False)
 
 
 def main():
@@ -174,35 +158,30 @@ def main():
             print("Minimum number of parks:", min_parks)
             if output:
                 total_cost = 0
-                parks_total = 0
-                num_states = 0
-                # print(output)
+                
                 state_names = list(output.values())
                 for i in range(1, len(state_names)):
-                    # print(csp.driving_distance[state_names[i - 1]][state_names[i]])
                     total_cost += csp.driving_distance[state_names[i - 1]
                                                        ][state_names[i]]
-                    parks_total += csp.parks[state_names[i - 1]]
-                    num_states += 1
-                    parks_total += csp.parks[state_names[-1]]
-                    num_states += 1
+                                        
                 print("Solution path: ", list(output.values()))
                 print("Number of states on a path", len(list(output.values())))
                 print("Path cost:", total_cost)
-                print("Number of national parks visited: ", csp.parks_visited)
+                print("Number of national parks visited: ",
+                      csp.parks_visited, "\n\n")
             else:
-                print("Solution path: FAILURE: NO PATH FOUND")
+                print("\n\nSolution path: FAILURE: NO PATH FOUND")
                 print("Number of states on a path: 0")
                 print("Path cost: 0")
-                print("Number of national parks visited: 0")
-        except Exception:
-            print("Solution path: FAILURE: NO PATH FOUND")
+                print("Number of national parks visited: 0\n\n")
+        except Exception:   # exception for when user enters an invalid initial state.
+            print("\n\nSolution path: FAILURE: NO PATH FOUND")
             print("Number of states on a path: 0")
             print("Path cost: 0")
-            print("Number of national parks visited: 0")
+            print("Number of national parks visited: 0\n\n")
 
     else:
-        print("Too many or too few arguments")
+        print("\n\nToo many or too few arguments")
 
 
 if __name__ == '__main__':
