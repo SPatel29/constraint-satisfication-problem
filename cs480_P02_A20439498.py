@@ -48,22 +48,18 @@ class CSP:
                 self.variables.append(int(zones_lst[i]))
         for i in range(len(zones_lst)):
             self.constraints[int(zones_lst[i])].append(row_lst[i])
+        
+        for i in driving_data[1:]:  #iterte over sublists
+            state_from = i[0]   # each sublist has state from as first element
+            self.driving_distance[state_from] = {}  #make a nested dictionary
 
-        for i in driving_data[1:]:
-            state_from = i[0]
-            self.driving_distance[state_from] = {}
-
-            for j in range(1, len(i)):
+            for j in range(1, len(i)):  
                 state_to = row_lst[j - 1]
-                if int(i[j]) > 0:
-                    self.driving_distance[state_from][state_to] = int(i[j])
+                if int(i[j]) > 0:   
+                    self.driving_distance[state_from][state_to] = int(i[j]) #store driving distance 
 
-        for i in range(len(parks_lst)):
-            self.parks[row_lst[i]] = int(parks_lst[i])
-
-    # adds variable (zone) into the self.variable. Gives it an initial value of None initially.
-    def add_variable(self, zone):
-        self.variables[zone] = None
+        for i in range(len(parks_lst)): 
+            self.parks[row_lst[i]] = int(parks_lst[i])  #rows list has state names, parks list has num of parks
 
     # returns the zone of where state is at
     def get_zone(self, state):
@@ -85,8 +81,8 @@ def backtracing_search(csp):
     add_initial(csp.get_zone(csp.initial), assignment, csp)
     return backtrack(csp, assignment)
 
-def check_consistent(assignment):
-    if False not in assignment.values():
+def check_consistent(assignment):  
+    if False not in assignment.values():     # we know solution  is consistent if every variable has a value
         return True
     return False
 
@@ -100,14 +96,14 @@ def backtrack(csp, assignment):
     var = select_unassigned_variable(assignment)   # var is zone
     # value will be a list of states that we can traverse in that zone
     for value in order_domain_values(csp, var, assignment):
-        # if value is consistent. Meaning there is path to it from current state to value
+        # If there is path to it from current state to value (next state)
         if value in list(csp.driving_distance[assignment[var - 1]].keys()):
             assignment[var] = value
             csp.parks_visited += csp.parks[value]
             # check and see if we get a dead end
             inferences = inference(csp, var, assignment)
             if inferences:
-                # traverse to next state
+                # traverse to next state using recursion
                 result = backtrack(csp, assignment)
                 if result:  #if assignment was consistent and parks visted >= min num of parks visted
                     return result
@@ -130,7 +126,7 @@ def inference(csp, var, assignment):    # var is next zone
     # as a result if we find it leads to a dead end and zone is not 12, return false
     # otherwise return True. I.e let's traverse to that state in the next zone
 
-    if var == 12:
+    if var == 12:   
         return True
     # next state leads to dead end, return False
     elif len(csp.driving_distance[assignment[var]]) == 0 and var != 12:
@@ -164,7 +160,7 @@ def main():
                     total_cost += csp.driving_distance[state_names[i - 1]
                                                        ][state_names[i]]
                                         
-                print("Solution path: ", list(output.values()))
+                print("\n\nSolution path: ", list(output.values()))
                 print("Number of states on a path", len(list(output.values())))
                 print("Path cost:", total_cost)
                 print("Number of national parks visited: ",
